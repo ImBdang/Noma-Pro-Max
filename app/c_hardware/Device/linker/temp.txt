@@ -1,0 +1,1 @@
+  FLASH (rx)      : ORIGIN = 0x08004000, LENGTH = 112K
