@@ -62,6 +62,7 @@ void flash_chunk(uint8_t *data, uint32_t len, uint32_t addr)
 
         status = FLASH_ProgramWord(addr + i, word);
         if (status != FLASH_COMPLETE) {
+            breakp();
             break;
         }
     }

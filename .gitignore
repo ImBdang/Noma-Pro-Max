@@ -1,1 +1,3 @@
 app/z_build
+app/*.bin
+app/*.txt

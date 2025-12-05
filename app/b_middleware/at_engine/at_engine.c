@@ -187,7 +187,7 @@ void handle_urc_line(const char *urc){
     if (strncmp(urc, "+HTTPREAD:", 10) == 0) {
         uint32_t size = httpread_dispatch(urc);
         if (size == 0){
-            http_read_state = HTTP_READ_IDLE;   
+            http_read_state = HTTP_READ_DONE;   
             return;
         }
         event_t event = {
