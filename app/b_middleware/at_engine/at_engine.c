@@ -3,7 +3,6 @@
 /* ====================================== GLOBAL VARIABLES ================================== */
 lwrb_t  usart_rb;                               /*<! LWRB */
 uint8_t line_buff[LINE_BUFFER_SIZE];            /*<! Buffer get data from LWRB to process */
-bool http_read_flag = false;
 uint8_t* http_read_ptr = NULL;
 /* ========================================================================================== */
 
@@ -51,15 +50,16 @@ bool send_at_cmd(at_command_t cmd){
 void line_parse(void){
     static uint16_t line_len = 0;       /*<! Len of the line resposne */
     uint8_t c;
+    static uint16_t checkp = 0;
     while (lwrb_read(&usart_rb, &c, 1)){
 
         /*<! ACTIVE TO COLLECT HTTPDATA, ENABLE WHEN HTTPREAD */
-        if (http_read_flag) {
+        if (http_read_state == HTTP_READ_BUSY) {
+            checkp++;
             *http_read_ptr++ = c;
             reading_chunk--;
             if (reading_chunk == 0) {
-                http_read_flag = false;
-                http_read_ptr = http_read_buff;        /*<! RESET TO HEAD OF THE BUFFER */
+                http_read_state = HTTP_READ_DONE;
             }
             continue; 
         }
@@ -186,8 +186,10 @@ void handle_urc_line(const char *urc){
 
     if (strncmp(urc, "+HTTPREAD:", 10) == 0) {
         uint32_t size = httpread_dispatch(urc);
-        if (size == 0)
+        if (size == 0){
+            http_read_state = HTTP_READ_IDLE;   
             return;
+        }
         event_t event = {
             .urc = URC_HTTPREAD
         };

@@ -14,6 +14,13 @@ extern char url[128];
 
 
 /* ====================================== TYPEDEF DEFINITION ================================== */
+typedef enum {
+    HTTP_READ_IDLE,
+    HTTP_READ_BUSY,
+    HTTP_READ_DONE
+} http_read_state_t;
 /* ============================================================================================ */
+
+extern http_read_state_t http_read_state;
 
 #endif /* __HTTP_TYPEDEF_H__ */

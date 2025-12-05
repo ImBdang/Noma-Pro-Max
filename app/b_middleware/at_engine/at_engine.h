@@ -21,7 +21,7 @@
 extern  lwrb_t  usart_rb;
 extern  uint8_t line_buff[LINE_BUFFER_SIZE];
 extern event_queue_t urc_event_queue;
-extern bool http_read_flag;
+extern bool is_reading_http;
 extern uint8_t* http_read_ptr;
 /* ============================================================================================= */
 

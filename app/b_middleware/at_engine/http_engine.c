@@ -325,7 +325,6 @@ bool http_read(uint32_t offset, uint32_t chunk){
         return false;
     if (http_data_len == 0)
         return true;
-    reading_chunk = chunk;
     static uint8_t step = 0;
     bool tmp = false;
     switch (step)

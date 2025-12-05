@@ -38,7 +38,7 @@ void urc_process(const char* urc){
         break;
 
     case URC_HTTPREAD:
-        http_read_flag = true;
+        http_read_state = HTTP_READ_BUSY;
         http_read_ptr = http_read_buff;
         break;
     }

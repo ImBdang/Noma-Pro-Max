@@ -8,8 +8,6 @@ bool ota_detect = true;
 /* ================================== STATIC DECLARATIONS =================================== */
 //static char firmware_url[200] = "https://raw.githubusercontent.com/ImBdang/ota/main/main.bin";
 //static char firmware_url[128] = "http://httpbin.org/bytes/512";
-//static char firmware_url[200] = "https://cdn.jsdelivr.net/gh/ImBdang/ota@main/main.bin";
-//static char firmware_url[256] = "https://www.dropbox.com/scl/fi/kfssrygfuc4mcr5gmitqx/main.bin?rlkey=c5n3ywt3pojn9izyzn1izy8ji&st=awpjckcq&dl=1";
 static char firmware_url[128] = "http://opinion.people.com.cn/GB/n1/2018/0815/c1003-30228758.html";
 static uint32_t offset = 0;
 
@@ -42,20 +40,39 @@ static bool ota_download_firmware(void){
     
     case 3:
         if (http_data_len > 0){
-            http_read_flag = true;
-            uint32_t actual_chunk = (http_data_len > CHUNK_SIZE) ? CHUNK_SIZE : http_data_len;
-            if (http_read(offset, actual_chunk)){
+            
+            if (http_read_state == HTTP_READ_BUSY)
+                return false;
+
+            if (http_read_state == HTTP_READ_DONE) {
                 uint32_t addr = OTA_SECTOR_ADDR + offset;
+                http_read_ptr = http_read_buff;
+                step++;
                 // flash_chunk(http_read_buff, actual_chunk, addr);
-                http_data_len -= actual_chunk;
-                offset += actual_chunk;
-                if (http_data_len == 0){
+            }
+
+            if (http_read_state == HTTP_READ_IDLE) {
+                uint32_t actual_chunk = (http_data_len > CHUNK_SIZE) ? CHUNK_SIZE : http_data_len;
+                reading_chunk = actual_chunk;
+                if (http_read(offset, actual_chunk)){
+                    http_data_len -= actual_chunk;
+                    offset += actual_chunk;
                     step++;
                 }
             }
         }
-        return false;;
+        return false;
     
+    // case 4:
+    //     if (http_data_len > 0){
+    //         if (reading_chunk == 0)
+    //             step--;
+    //         return false;
+    //     }
+    //     else if (http_data_len == 0)
+    //         step++;
+    //     return false;
+
     case 4:
         if (http_term()){      
             step = 0;
