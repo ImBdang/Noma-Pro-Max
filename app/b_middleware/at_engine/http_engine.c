@@ -59,13 +59,17 @@ bool http_init(void){
     switch (step)
     {
     case 0:
+        if (http_term())
+            step++;
+        return false;
+    case 1:
         tmp = http_init_entry();
         if (tmp){
             step++;
         }
         return false;
     
-    case 1:
+    case 2:
         if (http_init_wait()){
             step = 0;
             http_ready = true;
@@ -115,7 +119,7 @@ static bool http_term_wait(void){
         case EVT_ERR:
             DEBUG_PRINT("HTTPTERM ERROR\r\n");
             timeout_count = 0;
-            return false;
+            return true;
     }    
 }
 
@@ -137,7 +141,6 @@ bool http_term(void){
             http_ready = false;
             return true;
         }
-        step = 0;
         return false;
     }
     return false;
@@ -264,7 +267,6 @@ bool http_action(uint8_t action){
             step = 0;
             return true;
         }
-        step = 0;
         return false;
     }
     return false;

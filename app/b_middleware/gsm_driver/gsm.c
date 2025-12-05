@@ -653,29 +653,55 @@ static void process_gsm_attach_psd_state(void)
 
 /*<! GSM_ACTIVATE_PDP -------------------------------------------------*/
 static bool process_gsm_activate_pdp_state_entry(void){
-    at_command_t cmd = {
-        .cmd = "AT+CGDCONT=1,\"IP\",\"v-internet\"",
-        .expect = "",
-        .timeout_ms = 10000,
-        .cb = gsm_basic_callback
-    };
-    return send_at_cmd(cmd);  
+    switch (sharedStep){
+        case 0:{
+            at_command_t cmd = {
+                .cmd = "AT+CGDCONT=1,\"IP\",\"v-internet\"",
+                .expect = "",
+                .timeout_ms = 10000,
+                .cb = gsm_basic_callback
+            };
+            if (send_at_cmd(cmd)) 
+                return true;  
+            return false;
+        }
+        case 1:{
+            at_command_t cmd = {
+                .cmd = "AT+CGACT=1,1",
+                .expect = "",
+                .timeout_ms = 150000, 
+                .cb = gsm_basic_callback
+            };
+            if (send_at_cmd(cmd))
+                return true; 
+            return false;
+        }
+        default:
+            return false;
+    }
 }
 static bool process_gsm_activate_pdp_state_wait(void){
     event_t event;
     static uint8_t timeout_count = 0;
     static uint8_t max_timeout = 3;
+    
     if (!pop_event(&response_event_queue, &event))
         return false;
 
     switch (event.response)
     {
         case EVT_OK:
-            timeout_count = 0; 
-            decision_flag.activate_pdp = true;
-            gsm_cur_state = GSM_DECISION_STATE;
-            return true;
-
+            timeout_count = 0;
+            sharedStep++; 
+            
+            if (sharedStep >= 2) {  
+                sharedStep = 0;
+                decision_flag.activate_pdp = true;
+                return true;  
+            }
+            else {
+                return false; 
+            }
 
         case EVT_TIMEOUT:
             decision_flag.activate_pdp = false;
@@ -684,36 +710,46 @@ static bool process_gsm_activate_pdp_state_wait(void){
                 decision_flag.error = true;
                 timeout_count = 0;
             }
-            gsm_cur_state = GSM_DECISION_STATE;
+            sharedStep = 0; 
             return false;
         
-
         case EVT_ERR:
             timeout_count = 0;
+            sharedStep = 0;  
             decision_flag.error = true;
-            gsm_cur_state = GSM_DECISION_STATE;
             return false;
-    }  
+    }
+    return false;
 }
 
 static void process_gsm_activate_pdp_state(void)
 {
     static uint8_t step = 0;
     bool tmp = false;
+    
     switch (step)
     {
-    case 0:
+    case 0: 
         tmp = process_gsm_activate_pdp_state_entry();
         if (tmp){
-            step++;
+            step = 1;  
         }
         break;
     
-    case 1:
-        if (process_gsm_activate_pdp_state_wait())
+    case 1:  
+        tmp = process_gsm_activate_pdp_state_wait();
+        if (tmp) {
             step = 0;
+            gsm_cur_state = GSM_DECISION_STATE;
+        }
+        else if (sharedStep > 0 && sharedStep < 2) {
+            step = 0;
+        }
+        else if (decision_flag.error) {
+            step = 0;
+            gsm_cur_state = GSM_DECISION_STATE;
+        }
         break;
-
     }
 }
 
@@ -778,4 +814,5 @@ void gsm_process(void){
             process_gsm_ready_state();
             break;
     }
+    delay_ms(100);
 }
