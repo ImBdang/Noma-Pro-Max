@@ -1,7 +1,9 @@
 #include "ota_engine.h"
 
 /* ================================== GLOBAL VARIABLES ====================================== */
-bool ota_detect = true;
+bool ota_detect = false;
+volatile uint32_t ota_size;
+volatile uint32_t ota_flag;
 /* ========================================================================================== */
 
 
@@ -22,6 +24,7 @@ static bool ota_download_firmware(void){
     {
     case 0:
         flash_erase_sector_addr(OTA_SECTOR_ADDR);
+        set_ota_flag(OTA_FLAG_READY);
         step++;
         return false;
     
@@ -102,4 +105,42 @@ void ota_process(void){
     case 1:
         break;
     }
+}
+
+void ota_init(void)
+{
+    ota_size = *OTA_SIZE_ADDR;
+    ota_flag = *OTA_FLAG_ADDR;
+    if (ota_flag != OTA_FLAG_READY && ota_flag != OTA_FLAG_NONE)
+    {
+        ota_flag = OTA_FLAG_NONE;
+    }
+    if (ota_size == 0 || ota_size > (128 * 1024))
+    {
+        ota_size = 0;
+    }
+}
+
+
+void set_firmware_size(uint32_t size)
+{
+    if (size == 0 || size > (128 * 1024))   
+        return;
+    FLASH_Unlock();
+    FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
+                    FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+    FLASH_ProgramWord((uint32_t)OTA_SIZE_ADDR, size);
+    FLASH_Lock();
+}
+
+
+void set_ota_flag(uint32_t flag)
+{
+    if (flag != OTA_FLAG_NONE && flag != OTA_FLAG_READY)
+        return;
+    FLASH_Unlock();
+    FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
+                    FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
+    FLASH_ProgramWord((uint32_t)OTA_FLAG_ADDR, flag);
+    FLASH_Lock();
 }

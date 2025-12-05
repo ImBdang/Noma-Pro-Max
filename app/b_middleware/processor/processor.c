@@ -6,7 +6,8 @@
 
 void processor_init(void){
     hardware_init();
-    at_engine_init();
+    at_engine_init();  
+    ota_init();
 }
 
 void processor(void){

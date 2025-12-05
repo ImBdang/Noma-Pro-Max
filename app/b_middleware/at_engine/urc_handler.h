@@ -7,6 +7,7 @@
 #include "callback_typedef.h"
 #include "stdbool.h"
 #include "stdint.h"
+#include "ota_engine.h"
 #include "event.h"
 #include "string_handler.h"
 #include "debug_driver.h"

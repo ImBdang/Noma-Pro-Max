@@ -13,6 +13,9 @@ static void urc_httpaction_process(const char* urc){
     if (strcmp(status, "200") == 0){
         if (len != 0){
             http_data_len = len;            /*<! Keep the data len to global variable */
+            if (ota_detect == true){
+                set_firmware_size(len);
+            }
             DEBUG_PRINT("HTTPACTION STATUS CODE IS OK\r\n");
         }
     }

@@ -9,6 +9,7 @@
 #include "http_engine.h"
 #include "ota_engine.h"
 #include "gsm.h"
+#include "ota_engine.h"
 /* ============================================================================================= */
 
 

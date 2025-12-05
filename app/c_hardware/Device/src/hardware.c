@@ -137,4 +137,5 @@ void hardware_init(void){
     modem_init_led_hw();
     modem_init_button_hw();
     modem_init_pwkey_gpio_hw();
+    //GPIO_SetBits(LED_4G_PORT, LED_4G_PIN);
 }
